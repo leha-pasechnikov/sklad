@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интернет-склад</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="./script.js"></script>
+</head>
+<body>
+
+    <!-- Шапка сайта -->
+    <header>
+        <div class="logo">
+            <img src="logo.png" alt="Логотип компании">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" id="home-btn">Главная</a></li>
+                <li><a href="#" id="catalog-btn">Каталог</a></li>
+                <li><a href="#" id="cart-btn">Корзина (<span id="cart-count">0</span>)</a></li>
+                <li><button id="register-btn">Регистрация</button></li>
+                <li id="user-info" style="display:none;">
+                    <a href="#" id="user-name"></a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Главная страница -->
+    <section id="home" class="page">
+        <h1>Добро пожаловать в наш интернет-склад</h1>
+        <p>Мы предлагаем широкий ассортимент товаров на любой вкус: от игрушек до продуктов питания.</p>
+        <p>Выберите товары в каталоге и добавьте их в корзину, чтобы оформить заказ.</p>
+    </section>
+
+    <!-- Каталог товаров -->
+    <section id="catalog" class="page" style="display:none;">
+        <h2>Каталог товаров</h2>
+        <div class="categories">
+            <div class="category" data-category="toys">Игрушки</div>
+            <div class="category" data-category="clothes">Одежда</div>
+            <div class="category" data-category="food">Еда</div>
+        </div>
+        <div id="products-container"></div>
+    </section>
+
+    <!-- Окно корзины -->
+    <section id="cart" class="page" style="display:none;">
+        <h2>Ваша корзина</h2>
+        <div id="cart-items"></div>
+        <button id="checkout">Оформить заказ</button>
+        <div id="order-message" style="display:none;"></div>
+    </section>
+
+    <!-- Форма регистрации -->
+    <section id="register" class="page" style="display:none;">
+        <h2>Регистрация</h2>
+        <form id="register-form">
+            <label for="username">Логин:</label>
+            <input type="text" id="username" required>
+            <br>
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" required>
+            <br>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <div id="registration-message" style="display:none;"></div>
+    </section>
+
+    <!-- Подвал сайта -->
+    <footer>
+        <div class="company-info">
+            <p>© 2024 Интернет-склад. Все права защищены.</p>
+            <p>Контакты: support@warehouse.com | Телефон: +7 123 456 7890</p>
+            <p>Наши группы: <a href="https://vk.com">ВКонтакте</a> | <a href="https://t.me">Телеграм</a></p>
+        </div>
+    </footer>
+
+</body>
+</html>
