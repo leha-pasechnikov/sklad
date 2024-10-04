@@ -171,7 +171,7 @@ def hand_mode(canvas):
 
     connect_to_db()
 
-    root.mainloop()
+
 
 if __name__=='__main__':
     # Создание основного окна
@@ -181,3 +181,4 @@ if __name__=='__main__':
     canvas.pack()
     # Запуск программы
     hand_mode(canvas)
+    root.mainloop()

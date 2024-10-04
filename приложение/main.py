@@ -3,6 +3,8 @@ from tkinter import messagebox
 from work_shedule import work_shedule
 from hand_mode import hand_mode
 from barcode_mode import barcode_mode
+from sostav_yacheyka import sostav_yacheyki
+from zakaz_information import zakaz_information
 
 
 # Функция для обработки нажатия на пункты меню
@@ -82,12 +84,12 @@ menu_bar.add_cascade(label="Сотрудники", menu=employees_menu)
 
 # Меню "Ячейки"
 cells_menu = tk.Menu(menu_bar, tearoff=0)
-cells_menu.add_command(label="Состав", command=lambda: update_label("Ячейки: Состав"))
+cells_menu.add_command(label="Состав", command=lambda: switch('sostav_yacheyki(canvas)'))
 menu_bar.add_cascade(label="Ячейки", menu=cells_menu)
 
 # Меню "Заказы"
 orders_menu = tk.Menu(menu_bar, tearoff=0)
-orders_menu.add_command(label="Информация", command=lambda: update_label("Заказы: Информация"))
+orders_menu.add_command(label="Информация", command=lambda: switch('zakaz_information(canvas)'))
 orders_menu.add_command(label="Специальные заказы", command=lambda: update_label("Заказы: Специальные заказы"))
 menu_bar.add_cascade(label="Заказы", menu=orders_menu)
 
