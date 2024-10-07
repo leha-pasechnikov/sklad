@@ -5,6 +5,7 @@ from hand_mode import hand_mode
 from barcode_mode import barcode_mode
 from sostav_yacheyka import sostav_yacheyki
 from zakaz_information import zakaz_information
+from unloading_shipment import postavka_information
 
 
 # Функция для обработки нажатия на пункты меню
@@ -45,20 +46,6 @@ file_menu.add_command(label="Выйти", command=exit_app)
 menu_bar.add_cascade(label="Файл", menu=file_menu)
 
 
-# # Функция для отображения графика работы
-# def work_shedule(can: tk.Canvas):
-#     # Очистка canvas
-#     for widget in can.winfo_children():
-#         widget.destroy()
-#
-#     # Добавляем кнопки на canvas
-#     add_button = tk.Button(can, text="Добавить запись", command=lambda: print('1'))
-#     add_button.place(x=5, y=50)
-#
-#     edit_button = tk.Button(can, text="Редактировать запись", command=lambda: print('2'))
-#     edit_button.place(x=5, y=100)
-
-
 # Функция для отображения успеваемости сотрудников (очистка Canvas)
 def switch(comanda: str):
     # Очистка canvas
@@ -66,8 +53,8 @@ def switch(comanda: str):
         widget.destroy()
     try:
         eval(comanda)
-    except:
-        print('переход невозможен')
+    except Exception as ex:
+        print('переход невозможен', ex)
 
 
 # Меню "Режим"
@@ -79,8 +66,12 @@ menu_bar.add_cascade(label="Режим", menu=mode_menu)
 employees_menu = tk.Menu(menu_bar, tearoff=0)
 employees_menu.add_command(label="График работы", command=lambda: switch('work_shedule(canvas)'))
 employees_menu.add_command(label="Успеваемость", command=lambda: switch('update_label("Успеваемость")'))
-employees_menu.add_command(label="Статистика", command=lambda: update_label("Сотрудники: Статистика"))
 menu_bar.add_cascade(label="Сотрудники", menu=employees_menu)
+
+# Меню "Поставки"
+shipment_menu = tk.Menu(menu_bar, tearoff=0)
+shipment_menu.add_command(label="Разгрузка поставки", command=lambda: switch('postavka_information(canvas)'))
+menu_bar.add_cascade(label="Поставки", menu=shipment_menu)
 
 # Меню "Ячейки"
 cells_menu = tk.Menu(menu_bar, tearoff=0)

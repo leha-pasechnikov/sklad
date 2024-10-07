@@ -33,27 +33,27 @@ def barcode_mode(canvas):
         img = Image.open("код.jpg")
 
         if table_dropdown.get() == valu[0]:
-            img = img.resize(((len(entry.get())) * 20, 100), Image.LANCZOS)
+            img = img.resize(((len(entry.get())) * 60, 200), Image.LANCZOS)
         else:
-            img = img.resize((150, 150), Image.LANCZOS)
+            img = img.resize((200, 200), Image.LANCZOS)
         photo = ImageTk.PhotoImage(img)
         img_label.config(image=photo)
         img_label.image = photo
 
-    entry = tk.Entry(canvas, width=30)
-    entry.place(x=1000, y=400)
+    entry = tk.Entry(canvas, width=30,font=("Arial", 20))
+    entry.place(x=100, y=150)
 
-    button1 = tk.Button(canvas, text="сформировать код", command=lambda: do_code())
-    button1.place(x=550, y=100)
+    button1 = tk.Button(canvas,height=2, font=("Arial", 12), text="сформировать код", command=lambda: do_code())
+    button1.place(x=100, y=300)
 
-    button1 = tk.Button(canvas, text="Распечатать код", command=lambda: print_marka("код.jpg"))
-    button1.place(x=550, y=200)
+    button1 = tk.Button(canvas,height=2, font=("Arial", 12), text="Распечатать код", command=lambda: print_marka("код.jpg"))
+    button1.place(x=300, y=300)
 
     img_label = tk.Label(canvas)
-    img_label.place(x=500, y=500)
+    img_label.place(x=700, y=100)
 
     table_dropdown = ttk.Combobox(canvas, state="readonly", font=("Arial", 12))
-    table_dropdown.place(x=1000, y=350)
+    table_dropdown.place(x=100, y=100)
     valu = ["штрих-код", "qr-код", "марка"]
     table_dropdown['values'] = valu
 

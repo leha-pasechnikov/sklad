@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить запись</title>
+</head>
+<body>
+    <h1>Добавить новую запись в базу данных</h1>
+    <form action="{{ url_for('add_record') }}" method="post">
+        <button type="submit">Добавить запись</button>
+    </form>
+</body>
+</html>

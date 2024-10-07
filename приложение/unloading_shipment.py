@@ -5,7 +5,7 @@ import mysql.connector
 import pyperclip
 
 
-def zakaz_information(canvas):
+def postavka_information(canvas):
     # Подключение к базе данных MySQL
     def connect_to_db():
         return mysql.connector.connect(
@@ -30,7 +30,6 @@ def zakaz_information(canvas):
         conn.close()
 
         return rows
-
 
     def button_click(button_name):
         # Очищаем текущее содержимое Treeview
@@ -59,6 +58,18 @@ def zakaz_information(canvas):
                 messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
                 pyperclip.copy(cell_value)
 
+    def copy_to_clipboard2(event):
+        # Получаем координаты клика
+        row_id = treeview_tovar.identify_row(event.y)
+        column_id = treeview_tovar.identify_column(event.x)
+
+        if row_id and column_id:
+            # Получаем значение ячейки по клику
+            cell_value = treeview_tovar.set(row_id, column_id)
+            if cell_value:
+                messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
+                pyperclip.copy(cell_value)
+
     def open_edit_window(event):
         # Получаем идентификатор строки, на которую был выполнен двойной щелчок
         selected_item = treeview.selection()[0]
@@ -72,12 +83,8 @@ def zakaz_information(canvas):
 
         # Метки и поля для ввода (id, логин, фамилия, имя, отчество, специальность)
         labels = [
-            "id_заказ", "id_клиент", "время_на_сборку", "время_сборки", "время_проверки",
-            "время_отправки", "статус", "логин менеджера",
-            "логин комплектовщика",
-            "логин проверяющего комплектовку",
-            "логин водителя",
-            "номер ячейки"
+            "id_поставки", "дата отгрузки", "дата приёма", "логин менеджера", "логин принимающего поставку",
+            "логин водителя"
         ]
         entries = {}
 
@@ -88,22 +95,22 @@ def zakaz_information(canvas):
             entry = tk.Entry(edit_window)
             entry.grid(row=i, column=1, padx=10, pady=5)
             entry.insert(0, values[i])  # Заполняем поля текущими значениями
-            entry['state'] = ['normal' if i in [8, 9, 10, 11] else 'disabled'][0]
+            entry['state'] = ['normal' if i in [4, 5] else 'disabled'][0]
             entries[label_text] = entry  # Сохраняем ссылки на поля ввода для дальнейшего использования
 
         # Функция для обновления записи в базе данных
         def save_changes():
             id_meneger = load_data_from_db(
-                f'select id_менеджер from менеджер where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин менеджера"].get()}");')[
+                f'select id_менеджер from менеджер where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин менеджера"].get()}" and статус="в работе");')[
                 0][0]
             id_komplekt = load_data_from_db(
-                f'select id_комплектовщик from комплектовщик where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин комплектовщика"].get()}");')[
+                f'select id_комплектовщик from комплектовщик where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин комплектовщика"].get()}" and статус="в работе");')[
                 0][0]
             id_prover = load_data_from_db(
-                f'select id_проверяющий_комплектовку from `проверяющий комплектовку` where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин проверяющего комплектовку"].get()}");')[
+                f'select id_проверяющий_комплектовку from `проверяющий комплектовку` where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин проверяющего комплектовку"].get()}" and статус="в работе");')[
                 0][0]
             id_voditel = load_data_from_db(
-                f'select id_водитель from водитель where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин водителя"].get()}");')[
+                f'select id_водитель from водитель where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин водителя"].get()}" and статус="в работе");')[
                 0][0]
             id_yacheyki = load_data_from_db(
                 f'select id_место_оформления_заказа from камера_хранения_заказа where название="{entries["номер ячейки"].get()}" and статус!="заблокирована";')[
@@ -155,14 +162,54 @@ def zakaz_information(canvas):
         save_button = tk.Button(edit_window, text="Сохранить", command=save_changes)
         save_button.place(x=280, y=380)
 
+    def find_tovar_from_postavka(event):
+        first_value = treeview.item(treeview.selection()[0])['values'][0]
+        quar = f'''
+select 
+z.`id_товара`,
+s4.наименование,
+s4.`штрих-код`,
+z.`марка`,
+z.`qr-код`,
+z.`срок_годности`,
+z.`время_распределения`,
+s3.наименование as "имя ячейки",
+s1.логин as "логин комплектовщика ячеек",
+s2.логин as "логин менеджера",
+z.`статус`
+ from товар z
+
+-- соединение с комплектовщик ячеек
+JOIN 
+    `комплектовщик ячеек` k ON z.`комплектовщик ячеек_id_комплектовщик_ячеек` = k.`id_комплектовщик_ячеек`
+JOIN 
+    сотрудник s1 ON k.`сотрудник_id_сотрудник` = s1.id_сотрудник
+-- Соединение с менеджером
+JOIN 
+    менеджер m ON z.`менеджер_id_менеджер` = m.id_менеджер
+JOIN 
+    сотрудник s2 ON m.`сотрудник_id_сотрудник` = s2.id_сотрудник
+-- Соединение с ячейкой
+JOIN
+	ячейка s3 ON z.ячейка_id_ячейки = s3.id_ячейки
+-- соединение с перечнем товаров
+JOIN
+	`перечень товаров` s4 ON z.`перечень товаров_id_перечень_товаров` = s4.id_перечень_товаров
+    
+ where поставка_id_поставка={first_value}
+ order by время_распределения desc;        
+        '''
+        dates = load_data_from_db(quar)
+        for row in treeview_tovar.get_children():
+            treeview_tovar.delete(row)
+
+        for row in dates:
+            treeview_tovar.insert('', tk.END, values=row)
+        label_postavka['text']=f"Поставка: {first_value}"
     # Создаем таблицу Treeview с колонками из таблицы "заказ"
     columns = (
-        "id_заказ", "id_клиент", "время_на_сборку", "время_сборки", "время_проверки",
-        "время_отправки", "статус", "логин менеджера",
-        "логин комплектовщика",
-        "логин проверяющего комплектовку",
-        "логин водителя",
-        "номер ячейки"
+        "id_поставки", "дата отгрузки", "дата приёма", "логин менеджера", "логин принимающего поставку",
+        "логин водителя"
     )
 
     treeview = ttk.Treeview(canvas, columns=columns, show="headings")
@@ -170,47 +217,32 @@ def zakaz_information(canvas):
     # Устанавливаем заголовки для каждого столбца
     for col in columns:
         treeview.heading(col, text=col)
-        treeview.column(col, width=150)
+        treeview.column(col, width=100)
     big_request = '''
-    SELECT 
-        z.id_заказ,
-        z.клиент_id_клиент as id_клиент,
-        z.время_на_сборку,
-        z.время_сборки,
-        z.время_проверки,
-        z.время_отправки,
-        z.статус,
-        s2.логин AS логин_менеджера,
-        s1.логин AS логин_комплектовщика,
-        s4.логин AS логин_проверяющего,
-        s3.логин AS логин_водителя,
-        s5.название as номер_ячейки
-    FROM 
-        заказ z
-    -- Соединение с комплектовщиком
-    JOIN 
-        комплектовщик k ON z.`комплектовщик_id_комплектовщик` = k.id_комплектовщик
-    JOIN 
-        сотрудник s1 ON k.`сотрудник_id_сотрудник` = s1.id_сотрудник
-    -- Соединение с менеджером
-    JOIN 
-        менеджер m ON z.`менеджер_id_менеджер` = m.id_менеджер
-    JOIN 
-        сотрудник s2 ON m.`сотрудник_id_сотрудник` = s2.id_сотрудник
-    -- Соединение с водителем
-    JOIN 
-        водитель v ON z.`водитель_id_водитель` = v.id_водитель
-    JOIN 
-        сотрудник s3 ON v.`сотрудник_id_сотрудник` = s3.id_сотрудник
-    -- Соединение с проверяющим
-    JOIN 
-        `проверяющий комплектовку` p ON z.`проверяющий комплектовку_id_проверяющий_комплектовку` = p.id_проверяющий_комплектовку
-    JOIN 
-        сотрудник s4 ON p.`сотрудник_id_сотрудник` = s4.id_сотрудник
-    -- Соединение с ячейкой
-    JOIN
-        камера_хранения_заказа s5 ON z.камера_хранения_заказа_id_место_оформления_заказа = s5.id_место_оформления_заказа
-    order by z.время_на_сборку desc;
+select 
+z.id_поставка,
+z.`дата отгрузки`, 
+z.`дата приёма`,
+s2.логин as "логин менеджера",
+s1.логин as "логин принимающего поставку",
+s3.логин as "логин водителя"
+from поставка z
+-- соединение с принимающим поставку
+JOIN 
+    `принимающий поставку` k ON z.`принимающий поставку_id_принимающий_поставку` = k.`id_принимающий_поставку`
+JOIN 
+    сотрудник s1 ON k.`сотрудник_id_сотрудник` = s1.id_сотрудник
+-- Соединение с менеджером
+JOIN 
+    менеджер m ON z.`менеджер_id_менеджер` = m.id_менеджер
+JOIN 
+    сотрудник s2 ON m.`сотрудник_id_сотрудник` = s2.id_сотрудник
+-- Соединение с водителем
+JOIN 
+    водитель v ON z.`водитель_id_водитель` = v.id_водитель
+JOIN 
+    сотрудник s3 ON v.`сотрудник_id_сотрудник` = s3.id_сотрудник
+order by z.`дата отгрузки` desc;
     '''
     # Загружаем данные из базы данных
     data = load_data_from_db(big_request)
@@ -219,30 +251,23 @@ def zakaz_information(canvas):
     for item in data:
         treeview.insert("", tk.END, values=item)
 
-    treeview.place(x=50, y=550, height=400)
+    treeview.place(x=30, y=550, height=400)
+
+    # Загружаем данные из базы данных
+    data = load_data_from_db(
+        'select id_сотрудник,логин,фамилия,имя,отчество,специальность from сотрудник where статус="в работе";')
 
     worked_employee_treeview = ttk.Treeview(canvas, columns=('#1', '#2', '#3', '#4', '#5', '#6'), show="headings")
-
+    # Заполняем таблицу данными из БД
+    for item in data:
+        worked_employee_treeview.insert("", tk.END, values=item)
     worked_employee_treeview.heading('#1', text='id_сотрудника')
     worked_employee_treeview.heading('#2', text='логин')
     worked_employee_treeview.heading('#3', text='фамилия')
     worked_employee_treeview.heading('#4', text='имя')
     worked_employee_treeview.heading('#5', text='отчество')
     worked_employee_treeview.heading('#6', text='специальность')
-
     worked_employee_treeview.place(x=500, y=80, height=400)
-
-    # Привязываем обработчик события клика по ячейке
-    worked_employee_treeview.bind("<Double-1>", copy_to_clipboard)
-    treeview.bind("<Double-1>", open_edit_window)
-
-    # Загружаем данные из базы данных
-    data = load_data_from_db(
-        'select id_сотрудник,логин,фамилия,имя,отчество,специальность from сотрудник where статус="в работе";')
-
-    # Заполняем таблицу данными из БД
-    for item in data:
-        worked_employee_treeview.insert("", tk.END, values=item)
 
     # Создаем метку для отображения нажатой кнопки
     label = tk.Label(canvas, text="Специальность:", font=("Helvetica", 20))
@@ -254,8 +279,8 @@ def zakaz_information(canvas):
     buttons = [
         "Водитель",
         "Менеджер",
-        "Комплектовщик",
-        "Проверяющий комплектовку"
+        "Комплектовщик ячеек",
+        "Принимающий поставку"
     ]
 
     for index, button_name in enumerate(buttons):
@@ -263,6 +288,35 @@ def zakaz_information(canvas):
                            command=lambda name=button_name: button_click(name))
         button.place(x=50, y=200 + index * 40, width=300)
 
+    label_postavka = tk.Label(canvas, text="Поставка: ?", font=("Helvetica", 20))
+    label_postavka.place(x=700, y=500)
+
+    df=['#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9', '#10', '#11']
+    treeview_tovar = ttk.Treeview(canvas, columns=(df
+    ), show="headings")
+
+    treeview_tovar.heading('#1', text='id_товара')
+    treeview_tovar.heading('#2', text='наименование')
+    treeview_tovar.heading('#3', text='штрих-код')
+    treeview_tovar.heading('#4', text='марка')
+    treeview_tovar.heading('#5', text='qr-код')
+    treeview_tovar.heading('#6', text='срок годности')
+    treeview_tovar.heading('#7', text='время распределения')
+    treeview_tovar.heading('#8', text='имя ячейки')
+    treeview_tovar.heading('#9', text='логин комплектовщка ячеек')
+    treeview_tovar.heading('#10', text='логин менеджера')
+    treeview_tovar.heading('#11', text='статус')
+
+    for i in df:
+        treeview_tovar.column(i,width=110)
+
+    treeview_tovar.place(x=650, y=550, height=400)
+
+    # Привязываем обработчик события клика по ячейке
+    worked_employee_treeview.bind("<Double-1>", copy_to_clipboard)
+    treeview.bind("<<TreeviewSelect>>", find_tovar_from_postavka)
+    treeview.bind("<Double-1>", open_edit_window)
+    treeview_tovar.bind("<Double-1>", copy_to_clipboard2)
 
 if __name__ == '__main__':
     # Создание основного окна
@@ -271,7 +325,7 @@ if __name__ == '__main__':
     can = tk.Canvas(root, width=1920, height=1080)
     can.pack()
     # Запуск программы
-    zakaz_information(can)
+    postavka_information(can)
     root.mainloop()
     # Закрытие соединения с базой данных
     cursor.close()
