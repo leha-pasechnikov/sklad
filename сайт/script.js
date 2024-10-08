@@ -1,176 +1,214 @@
-// Получаем ссылки на элементы
 const homeSection = document.getElementById('home');
 const catalogSection = document.getElementById('catalog');
 const cartSection = document.getElementById('cart');
-const registerSection = document.getElementById('register');
 const registerBtn = document.getElementById('register-btn');
 const userName = document.getElementById('user-name');
-const userInfo = document.getElementById('user-info');
 const cartCount = document.getElementById('cart-count');
 const productsContainer = document.getElementById('products-container');
 const cartItemsContainer = document.getElementById('cart-items');
-const orderMessage = document.getElementById('order-message');
 const registrationMessage = document.getElementById('registration-message');
+const registerModal = document.getElementById('register-modal');
+const closeModal = document.getElementById('close-modal');
+const orderMessage = document.getElementById('order-message');
+
+let isUserRegistered = false;
+let cart = [];
 
 // Скрытие всех страниц
 function hideAllPages() {
     homeSection.style.display = 'none';
     catalogSection.style.display = 'none';
     cartSection.style.display = 'none';
-    registerSection.style.display = 'none';
 }
 
-// Показать главную страницу
+// Показ главной страницы
 document.getElementById('home-btn').addEventListener('click', () => {
     hideAllPages();
     homeSection.style.display = 'block';
 });
 
-// Показать каталог
+// Проверка регистрации для каталога
 document.getElementById('catalog-btn').addEventListener('click', () => {
-    hideAllPages();
-    catalogSection.style.display = 'block';
-    loadProducts('toys'); // Загружаем игрушки по умолчанию
+    if (!isUserRegistered) {
+        hideAllPages();
+        catalogSection.style.display = 'block';
+        loadProducts('toys'); // Загружаем игрушки по умолчанию
+    }
 });
 
-// Показать корзину
+// Проверка регистрации для корзины
 document.getElementById('cart-btn').addEventListener('click', () => {
-    hideAllPages();
-    cartSection.style.display = 'block';
+     {
+        hideAllPages();
+        cartSection.style.display = 'block';
+        loadCart();
+    }
 });
 
-// Показать форму регистрации
+// Закрытие модального окна
+closeModal.addEventListener('click', () => {
+    registerModal.style.display = 'none';
+});
+
+// Показываем модальное окно при нажатии на кнопку "Регистрация"
+document.getElementById('register-btn').addEventListener('click', () => {
+    const registerModal = document.getElementById('register-modal');
+    registerModal.style.display = 'flex'; // Показываем модальное окно
+});
+
+// Показываем модальное окно при нажатии на кнопку "Регистрация"
+document.getElementById('register-btn').addEventListener('click', () => {
+    if (!isUserRegistered) {
+        // Если пользователь не зарегистрирован, показываем модальное окно
+        const registerModal = document.getElementById('register-modal');
+        registerModal.style.display = 'flex'; // Показываем модальное окно
+    } else {
+        // Если пользователь уже зарегистрирован, выводим сообщение
+        alert('Вы уже зарегистрированы как ' + userName.textContent);
+    }
+});
+
+// Показываем модальное окно при нажатии на кнопку "Регистрация"
 registerBtn.addEventListener('click', () => {
-    hideAllPages();
-    registerSection.style.display = 'block';
-    registrationMessage.style.display = 'none'; // Скрываем сообщение регистрации
+    if (!isUserRegistered) {
+        registerModal.style.display = 'flex'; // Показываем модальное окно
+    } else {
+        alert('Вы уже зарегистрированы как ' + userName.textContent);
+    }
+});
+
+// Обработка закрытия модального окна
+closeModal.addEventListener('click', () => {
+    registerModal.style.display = 'none';
 });
 
 // Обработка регистрации
 document.getElementById('register-form').addEventListener('submit', (event) => {
-    event.preventDefault();
+    event.preventDefault(); // Отключаем стандартное поведение формы (перезагрузку страницы)
+    
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    // Успешная регистрация
-    userName.textContent = username;
-    userName.style.display = 'inline';
-    userInfo.style.display = 'inline';
-    registerBtn.style.display = 'none';
-    
-    // Скрываем форму регистрации и показываем главную страницу
-    hideAllPages();
-    homeSection.style.display = 'block'; 
-    registrationMessage.style.display = 'none'; // Скрываем сообщение регистрации
+    if (username && password) {
+        // Скрываем модальное окно регистрации
+        registerModal.style.display = 'none';
+
+        // Сбрасываем поля ввода после регистрации
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        registrationMessage.style.display = 'none';
+        
+        // После регистрации убираем возможность открыть модальное окно
+        registerBtn.textContent = username; // Изменяем текст кнопки
+    } else {
+        // Если поля не заполнены, показываем сообщение об ошибке
+        registrationMessage.textContent = 'Заполните все поля';
+        registrationMessage.style.display = 'block';
+    }
 });
 
-// Загрузка продуктов в зависимости от категории
+// Закрытие модального окна при нажатии на кнопку "Закрыть"
+closeModal.addEventListener('click', () => {
+    registerModal.style.display = 'none';
+});
+
+
+// Выбор категории и выделение
 document.querySelectorAll('.category').forEach(category => {
     category.addEventListener('click', (event) => {
         const selectedCategory = event.target.dataset.category;
         loadProducts(selectedCategory);
+
+        document.querySelectorAll('.category').forEach(button => button.classList.remove('active'));
+        event.target.classList.add('active');
     });
 });
 
-// Данные товаров по категориям
+// Продукты по категориям
 const productsByCategory = {
     toys: [
-        { id: 1, name: "Мяч", price: 500 },
-        { id: 2, name: "Кукла", price: 700 }
+        { id: 1, name: "Мяч", price: 500, image: 'ball.jpg' },
+        { id: 2, name: "Кукла", price: 700, image: 'doll.jpg' },
+        // Добавьте остальные товары...
     ],
     clothes: [
-        { id: 3, name: "Футболка", price: 1000 },
-        { id: 4, name: "Джинсы", price: 1500 }
+        { id: 7, name: "Футболка", price: 1000, image: 'tshirt.jpg' },
+        { id: 8, name: "Джинсы", price: 1500, image: 'jeans.jpg' },
+        // Добавьте остальные товары...
     ],
     food: [
-        { id: 5, name: "Хлеб", price: 200 },
-        { id: 6, name: "Молоко", price: 150 }
+        { id: 13, name: "Хлеб", price: 100, image: 'bread.jpg' },
+        { id: 14, name: "Молоко", price: 50, image: 'milk.jpg' },
+        // Добавьте остальные товары...
     ]
 };
 
-// Загрузка товаров в контейнер
+// Загрузка продуктов
 function loadProducts(category) {
-    productsContainer.innerHTML = ''; // Очищаем контейнер
-    const products = productsByCategory[category];
+    productsContainer.innerHTML = '';
 
+    const products = productsByCategory[category];
     products.forEach(product => {
-        const productElement = document.createElement('div');
-        productElement.classList.add('product');
-        productElement.innerHTML = `
+        const productDiv = document.createElement('div');
+        productDiv.className = 'product';
+        productDiv.innerHTML = `
+            <img src="${product.image}" alt="${product.name}">
             <h3>${product.name}</h3>
             <p>Цена: ${product.price} руб.</p>
-            <label for="quantity-${product.id}">Количество:</label>
-            <input type="number" id="quantity-${product.id}" min="1" value="1">
-            <button class="add-to-cart" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}">Добавить в корзину</button>
+            <input type="number" id="quantity-${product.id}" value="1" min="1">
+            <button onclick="addToCart(${product.id})">Добавить в корзину</button>
         `;
-        productsContainer.appendChild(productElement);
-    });
-
-    // Обработка добавления товаров в корзину
-    document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', (event) => {
-const productId = event.target.dataset.id;
-            const productName = event.target.dataset.name;
-            const productPrice = event.target.dataset.price;
-            const productQuantity = document.getElementById('quantity-' + productId).value;
-
-            addToCart(productId, productName, productPrice, productQuantity);
-        });
+        productsContainer.appendChild(productDiv);
     });
 }
 
-// Корзина
-let cart = [];
+// Добавление товара в корзину
+function addToCart(productId) {
+    const product = Object.values(productsByCategory).flat().find(p => p.id === productId);
+    const quantityInput = document.getElementById(`quantity-${product.id}`);
+    const quantity = parseInt(quantityInput.value);
 
-// Добавление товаров в корзину
-function addToCart(id, name, price, quantity) {
-    const existingProduct = cart.find(product => product.id === id);
-    if (existingProduct) {
-        existingProduct.quantity += parseInt(quantity);
+    const cartItem = { ...product, quantity };
+
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+        existingItem.quantity += quantity;
     } else {
-        cart.push({ id, name, price, quantity: parseInt(quantity) });
+        cart.push(cartItem);
     }
-    updateCart();
+
+    cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
 }
 
-// Обновление корзины
-function updateCart() {
-    cartCount.textContent = cart.reduce((sum, product) => sum + product.quantity, 0);
+// Загрузка товаров в корзине
+function loadCart() {
     cartItemsContainer.innerHTML = '';
 
-    cart.forEach(product => {
-        const cartItem = document.createElement('div');
-        cartItem.classList.add('cart-item');
-        cartItem.innerHTML = `
-            <p>${product.name} - ${product.quantity} шт. по ${product.price} руб.</p>
-            <button class="remove-item" data-id="${product.id}">Удалить</button>
-        `;
-        cartItemsContainer.appendChild(cartItem);
-    });
+    if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p>Корзина пуста</p>';
+        return;
+    }
 
-    // Обработка удаления товаров из корзины
-    document.querySelectorAll('.remove-item').forEach(button => {
-        button.addEventListener('click', (event) => {
-            const productId = event.target.dataset.id;
-            cart = cart.filter(product => product.id !== productId);
-            updateCart();
-        });
+    cart.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.innerHTML = `
+            <h4>${item.name} x ${item.quantity}</h4>
+            <p>Цена: ${item.price} руб. (Итого: ${item.price * item.quantity} руб.)</p>
+        `;
+        cartItemsContainer.appendChild(itemDiv);
     });
 }
 
-// Обработка оформления заказа
+// Оформление заказа
 document.getElementById('checkout').addEventListener('click', () => {
-    if (cart.length > 0) {
-        orderMessage.textContent = 'Заказ оформлен! Спасибо за покупку.';
-        orderMessage.style.display = 'block';
-        cart = []; // Очистка корзины после оформления заказа
-        updateCart(); // Обновляем корзину
+    if (cart.length === 0) {
+        alert("Ваша корзина пуста. Добавьте товары перед оформлением заказа.");
     } else {
-        orderMessage.textContent = 'Ваша корзина пуста!';
+        orderMessage.textContent = 'Ваш заказ успешно оформлен!';
         orderMessage.style.display = 'block';
+
+        cart = [];
+        cartCount.textContent = '0';
+        loadCart();
     }
 });
-
-// Начальная загрузка
-hideAllPages();
-homeSection.style.display = 'block'; 
