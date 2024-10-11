@@ -124,6 +124,7 @@ def work_shedule(canvas):
 
     # Функция, которая вызывается при нажатии на кнопку
     def button_clicked(row, col):
+
         data_for_exel = str(current_date)[:8] + [
             buttons[row][col]['text'] if int(buttons[row][col]['text']) >= 10 else '0' + buttons[row][col]['text']][
             0] + ' 00:00:00'
@@ -149,6 +150,98 @@ def work_shedule(canvas):
             # Очищаем текущее содержимое Treeview
             for row in worked_employee_treeview.get_children():
                 worked_employee_treeview.delete(row)
+        # Очищаем текущее содержимое Treeview
+        for row in treeview_pik.get_children():
+            treeview_pik.delete(row)
+
+        quary_data = ['', '', '']
+
+        if table_dropdown_smena.get() == 'дневная':
+            quary_data[1] = f'"{data_for_exel[:10]} 9:00:00" and "{data_for_exel[:10]} 21:00:00"'
+        else:
+            # Преобразуем строку в объект datetime
+            date_obj = datetime.strptime(data_for_exel[:10], "%Y-%m-%d")
+            # Прибавляем один день
+            new_date_obj = date_obj + timedelta(days=1)
+            # Преобразуем обратно в строку, если нужно
+            new_date_str = new_date_obj.strftime("%Y-%m-%d")
+
+            quary_data[1] = f'"{data_for_exel[:10]} 21:00:00" and "{new_date_str} 9:00:00"'
+        if table_dropdown_spec.get() != "Менеджер":
+            if table_dropdown_spec.get() == "Комплектовщик ячеек":
+                quary = f'''
+    select 
+    s2.логин, 
+    count(*) as "количество пиков"  
+    from товар z
+    -- Соединение с комплектовщиком
+    JOIN `комплектовщик ячеек` k ON z.`комплектовщик ячеек_id_комплектовщик_ячеек` = k.id_комплектовщик_ячеек
+    JOIN сотрудник s2 ON k.`сотрудник_id_сотрудник` = s2.id_сотрудник
+    where 
+    z.время_распределения BETWEEN {quary_data[1]} 
+    group by z.`комплектовщик ячеек_id_комплектовщик_ячеек`
+    order by count(*) desc; 
+    '''
+            elif table_dropdown_spec.get() == "Принимающий поставку":
+                quary = f'''
+    select 
+    s2.логин,
+    count(*)
+    from товар z
+    -- соединение с принимающим поставку
+    join поставка s1 on z.поставка_id_поставка=s1.id_поставка
+    JOIN `принимающий поставку` k ON s1.`принимающий поставку_id_принимающий_поставку` = k.`id_принимающий_поставку`
+    JOIN сотрудник s2 ON k.`сотрудник_id_сотрудник` = s2.id_сотрудник
+    where s1.`дата приёма` BETWEEN {quary_data[1]}
+    group by s1.`принимающий поставку_id_принимающий_поставку`
+    order by count(*) desc           
+                '''
+            elif table_dropdown_spec.get() == "Водитель":
+                quary = f'''
+    SELECT s.логин, COUNT(*) AS общее_количество
+    FROM сотрудник s
+    JOIN водитель v ON s.id_сотрудник = v.сотрудник_id_сотрудник
+    JOIN (
+        SELECT водитель_id_водитель
+        FROM поставка
+        where `дата приёма` BETWEEN {quary_data[1]}
+        UNION ALL
+        SELECT водитель_id_водитель
+        FROM заказ
+        where время_отправки BETWEEN {quary_data[1]}
+    ) AS объединённый_запрос ON v.id_водитель = объединённый_запрос.водитель_id_водитель
+    GROUP BY s.логин
+    order by count(*) desc  ;
+    '''
+            else:
+                if table_dropdown_spec.get() == "Комплектовщик":
+                    quary_data[0] = 'JOIN комплектовщик k ON z.`комплектовщик_id_комплектовщик` = k.id_комплектовщик'
+                    quary_data[2] = "group by z.комплектовщик_id_комплектовщик"
+                elif table_dropdown_spec.get() == "Проверяющий комплектовку":
+                    quary_data[
+                        0] = 'JOIN `проверяющий комплектовку` k ON z.`проверяющий комплектовку_id_проверяющий_комплектовку` = k.id_проверяющий_комплектовку'
+                    quary_data[2] = "group by z.`проверяющий комплектовку_id_проверяющий_комплектовку`"
+                quary = f'''
+    select 
+    s2.логин, 
+    count(*) as "количество пиков"
+    from заказ z
+    join `товары в заказе` s1 on z.id_заказ = s1.заказ_id_заказ
+    {quary_data[0]}
+    JOIN сотрудник s2 ON k.`сотрудник_id_сотрудник` = s2.id_сотрудник
+    where
+    z.время_на_сборку BETWEEN {quary_data[1]} 
+    {quary_data[2]}
+    order by count(*) desc;
+                '''
+            print(quary)
+            data = load_data_from_db(quary)
+            for item in data:
+                treeview_pik.insert("", tk.END, values=item)
+        summa = 0
+        for child in treeview_pik.get_children():
+            summa += int(treeview_pik.item(child, 'values')[1])
+        label_itog['text'] = f'Итог: {summa}'
 
     file_path_exel = 'C:/Users/Пасечниковы/Desktop/sklad/приложение/расписание.xlsx'  # Укажите путь к вашему файлу Excel
     # Заголовки для дней недели
@@ -236,7 +329,18 @@ def work_shedule(canvas):
     # Создаем кнопку
     open_button = tk.Button(canvas, font=("Arial", 14), text="Открыть Excel файл", command=lambda: os.startfile(
         'C:/Users/Пасечниковы/Desktop/sklad/приложение/расписание.xlsx'))
-    open_button.place(x=1400, y=300)
+    open_button.place(x=1600, y=880)
+
+    label_uspev = tk.Label(canvas, text="Успеваемость:", font=("Helvetica", 20))
+    label_uspev.place(x=1300, y=50)
+
+    treeview_pik = ttk.Treeview(canvas, columns=('#1', '#2'), show="headings")
+    treeview_pik.heading('#1', text='логин')
+    treeview_pik.heading('#2', text='количество пиков')
+    treeview_pik.place(x=1300, y=110)
+
+    label_itog = tk.Label(canvas, text="Итог: 0", font=("Helvetica", 20))
+    label_itog.place(x=1550, y=350)
 
     update_label()
 

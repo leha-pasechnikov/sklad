@@ -1,14 +1,28 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Добавить запись</title>
+    <title>Товары</title>
 </head>
 <body>
-    <h1>Добавить новую запись в базу данных</h1>
-    <form action="{{ url_for('add_record') }}" method="post">
-        <button type="submit">Добавить запись</button>
-    </form>
+    <h1>Список товаров</h1>
+    <table>
+        <tr>
+            <th>Наименование</th>
+            <th>Штрих-код</th>
+            <th>Действие</th>
+        </tr>
+        {% for product in products %}
+        <tr>
+            <td>{{ product['наименование'] }}</td>
+            <td>{{ product['штрих-код'] }}</td>
+            <td>
+                <form action="{{ url_for('buy_product', product_id=product['id_перечень_товаров']) }}" method="post">
+                    <button type="submit">Купить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
