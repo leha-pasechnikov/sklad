@@ -4,78 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интернет-склад</title>
-    <link rel="stylesheet" href="styles.css">
-    <script defer src="./script.js"></script>
+    <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
-
-    <!-- Шапка сайта -->
     <header>
-        <div class="logo">
-            <img src="logo.png" alt="Логотип компании">
-        </div>
+        <h1>Интернет-склад</h1>
         <nav>
-            <ul>
-                <li><a href="#" id="home-btn">Главная</a></li>
-                <li><a href="#" id="catalog-btn">Каталог</a></li>
-                <li><a href="#" id="cart-btn">Корзина (<span id="cart-count">0</span>)</a></li>
-                <li><button id="register-btn">Регистрация</button></li>
-                <li id="user-info" style="display:none;">
-                    <a href="#" id="user-name"></a>
-                </li>
-            </ul>
+            <button id="home-btn">Главная</button>
+            <button id="catalog-btn">Каталог</button>
+            <button id="cart-btn">Корзина (<span id="cart-count">0</span>)</button>
+            <button id="register-btn">Регистрация</button>
         </nav>
     </header>
 
     <!-- Главная страница -->
-    <section id="home" class="page">
-        <h1>Добро пожаловать в наш интернет-склад</h1>
-        <p>Мы предлагаем широкий ассортимент товаров на любой вкус: от игрушек до продуктов питания.</p>
-        <p>Выберите товары в каталоге и добавьте их в корзину, чтобы оформить заказ.</p>
-    </section>
+    <div id="home" class="section">
+        <h2>Добро пожаловать в Интернет-склад!</h2>
+        <p>Здесь вы найдете все необходимое по доступным ценам с доставкой на дом.</p>
+    </div>
 
     <!-- Каталог товаров -->
-    <section id="catalog" class="page" style="display:none;">
+    <div id="catalog" class="section" style="display:none;">
         <h2>Каталог товаров</h2>
-        <div class="categories">
-            <div class="category" data-category="toys">Игрушки</div>
-            <div class="category" data-category="clothes">Одежда</div>
-            <div class="category" data-category="food">Еда</div>
+        <div id="category-list" class="category-buttons">
+            <button data-category="toys" class="category">Игрушки</button>
+            <button data-category="clothes" class="category">Одежда</button>
+            <button data-category="food" class="category">Продукты</button>
         </div>
-        <div id="products-container"></div>
-    </section>
+        <div id="products-container" class="products-grid"></div>
+    </div>
 
-    <!-- Окно корзины -->
-    <section id="cart" class="page" style="display:none;">
-        <h2>Ваша корзина</h2>
-        <div id="cart-items"></div>
-        <button id="checkout">Оформить заказ</button>
-        <div id="order-message" style="display:none;"></div>
-    </section>
+    <!-- Модальное окно регистрации -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <button id="close-modal" class="close-btn">X</button> 
+            <h2>Регистрация</h2>
+            <form id="register-form">
+                <input type="text" id="username" placeholder="Введите имя пользователя">
+                <input type="password" id="password" placeholder="Введите пароль">
+                <p id="registration-message" style="display: none; color: red;">Заполните все поля</p>
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
 
-    <!-- Форма регистрации -->
-    <section id="register" class="page" style="display:none;">
-        <h2>Регистрация</h2>
-        <form id="register-form">
-            <label for="username">Логин:</label>
-            <input type="text" id="username" required>
-            <br>
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" required>
-            <br>
-            <button type="submit">Зарегистрироваться</button>
-        </form>
-        <div id="registration-message" style="display:none;"></div>
-    </section>
+    <!-- Модальное окно корзины -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <button id="close-cart-modal" class="close-btn">X</button>
+            <h2>Ваша корзина</h2>
+            <div id="cart-modal-items"></div>
+            <button id="checkout">Оформить заказ</button> <p id="cart-modal-message" style="display:none; color: green;"></p>
+        </div>
+    </div>
 
-    <!-- Подвал сайта -->
     <footer>
-        <div class="company-info">
-            <p>© 2024 Интернет-склад. Все права защищены.</p>
-            <p>Контакты: support@warehouse.com | Телефон: +7 123 456 7890</p>
-            <p>Наши группы: <a href="https://vk.com">ВКонтакте</a> | <a href="https://t.me">Телеграм</a></p>
-        </div>
+        <p>© 2024 Интернет-склад. Все права защищены.</p>
     </footer>
 
+    <script src="script.js"></script> 
 </body>
 </html>
