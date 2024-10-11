@@ -1,58 +1,42 @@
 from flask import Flask, render_template, request, redirect, url_for
-import mysql.connector  # Импортируем правильный модуль для работы с MySQL
-
-def connect_to_db():
-    return mysql.connector.connect(
-        host="localhost",  # Замените на ваш хост
-        user="root",  # Замените на ваше имя пользователя
-        password="",  # Замените на ваш пароль
-        database="sklad"  # Название базы данных
-    )
-
-# Функция для загрузки данных (SELECT)
-def load_data_from_db(query):
-    conn = connect_to_db()
-    cursor = conn.cursor()
-
-    # Выполняем SQL-запрос для получения данных
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
-
-# Функция для модифицирующих запросов (INSERT, UPDATE, DELETE)
-def modify_db(query, params):
-    conn = connect_to_db()
-    cursor = conn.cursor()
-
-    # Выполняем SQL-запрос для изменения данных
-    cursor.execute(query, params)
-    conn.commit()
-    conn.close()
+import mysql.connector
 
 app = Flask(__name__)
 
-# Главная страница
+# Настройки подключения к базе данных
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'sklad'
+}
+
+# Подключение к базе данных
+def get_db_connection():
+    conn = mysql.connector.connect(**db_config)
+    return conn
+
+# Главная страница с отображением товаров
 @app.route('/')
 def index():
-    return render_template('index.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id_перечень_товаров, наименование, `штрих-код` FROM `перечень товаров`")
+    products = cursor.fetchall()
+    conn.close()
+    return render_template('index.html', products=products)
 
-# Добавление новой записи в базу данных
-@app.route('/add', methods=['POST'])
-def add_record():
-    if request.method == 'POST':
-        # Запрос на вставку данных
-        query = '''
-        INSERT INTO `перечень товаров` (id_перечень_товаров, наименование, `штрих-код`)
-        VALUES (%s, %s, %s)
-        '''
-        params = (1000, 'sds', '2321323123123131231231232')
+# Обработчик покупки товара
+@app.route('/buy/<int:product_id>', methods=['POST'])
+def buy_product(product_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Добавляем запрос для обновления или вставки данных о покупке
 
-        # Выполняем запрос на изменение (вставка)
-        modify_db(query, params)
-
-        # Перенаправление на главную страницу
-        return redirect(url_for('index'))
+    cursor.execute("INSERT INTO заказ (`время_на_сборку`, `время_сборки`, `время_проверки`, `время_отправки`, `статус`, `клиент_id_клиент`, `менеджер_id_менеджер`, `камера_хранения_заказа_id_место_оформления_заказа`, `проверяющий комплектовку_id_проверяющий_комплектовку`, `комплектовщик_id_комплектовщик`,`водитель_id_водитель`) VALUES ('2024-09-27 20:00:00', '2024-09-27 18:23:01', '2024-09-27 18:43:45', '2024-09-27 18:53:55', 'пример', 3, 1, 5, 1, 1,2);")
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

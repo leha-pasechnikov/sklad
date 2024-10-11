@@ -3,7 +3,8 @@ from mysql.connector import Error
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-def hand_mode(canvas):
+
+def hand_mode(canvas, id_meneger):
     connection = None
     tree = None
     current_table = None
@@ -101,22 +102,23 @@ def hand_mode(canvas):
 
     # Открытие окна для редактирования/добавления записи
     def open_edit_window(values):
-        edit_window = tk.Toplevel(canvas)
-        edit_window.title("Редактирование записи")
-        cursor = connection.cursor()
-        cursor.execute(f"DESCRIBE `{current_table}`")
-        columns = cursor.fetchall()
+        if level>=2:
+            edit_window = tk.Toplevel(canvas)
+            edit_window.title("Редактирование записи")
+            cursor = connection.cursor()
+            cursor.execute(f"DESCRIBE `{current_table}`")
+            columns = cursor.fetchall()
 
-        entries = {}
-        for i, col in enumerate(columns):
-            col_name = col[0]
-            label = tk.Label(edit_window, text=col_name)
-            label.grid(row=i, column=0, padx=5, pady=5)
-            entry = tk.Entry(edit_window)
-            entry.grid(row=i, column=1, padx=5, pady=5)
-            if values:
-                entry.insert(0, values[i])
-            entries[col_name] = entry
+            entries = {}
+            for i, col in enumerate(columns):
+                col_name = col[0]
+                label = tk.Label(edit_window, text=col_name)
+                label.grid(row=i, column=0, padx=5, pady=5)
+                entry = tk.Entry(edit_window)
+                entry.grid(row=i, column=1, padx=5, pady=5)
+                if values:
+                    entry.insert(0, values[i])
+                entries[col_name] = entry
 
         # Сохранение записи
         def save_record():
@@ -152,12 +154,12 @@ def hand_mode(canvas):
         save_button = tk.Button(edit_window, text="Сохранить", command=save_record)
         save_button.grid(row=len(columns), column=0, columnspan=2, padx=5, pady=5)
 
-
-
     # Выпадающий список таблиц
     table_dropdown = ttk.Combobox(canvas, state="readonly", font=("Arial", 12))
     table_dropdown.place(x=80, y=50)
     table_dropdown.bind("<<ComboboxSelected>>", load_table)
+
+
 
     # Кнопки для управления записями
     add_button = tk.Button(canvas, text="Добавить запись", command=add_record, font=("Arial", 15))
@@ -169,16 +171,29 @@ def hand_mode(canvas):
     delete_button = tk.Button(canvas, text="Удалить запись", command=delete_record, font=("Arial", 15))
     delete_button.place(x=550, y=930)
 
+    conn = mysql.connector.connect(
+        host="localhost",  # Замените на ваш хост
+        user="root",  # Замените на ваше имя пользователя
+        password="",  # Замените на ваш пароль
+        database="sklad"  # Название базы данных
+    )
+    cursor = conn.cursor()
+    cursor.execute(f'select уровень_доступа from сотрудник where id_сотрудник={id_meneger}')
+    level = cursor.fetchall()[0][0]
+    conn.close()
+    if level<=1:
+        delete_button['state']='disabled'
+        edit_button['state'] = 'disabled'
+
     connect_to_db()
 
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     # Создание основного окна
     root = tk.Tk()
     root.geometry('1920x1080')
     canvas = tk.Canvas(root, width=1920, height=1080)
     canvas.pack()
     # Запуск программы
-    hand_mode(canvas)
+    hand_mode(canvas,31)
     root.mainloop()

@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import mysql.connector
-import pyperclip
 
 
 def zakaz_information(canvas):
@@ -57,7 +56,7 @@ def zakaz_information(canvas):
             cell_value = worked_employee_treeview.set(row_id, column_id)
             if cell_value:
                 messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
-                pyperclip.copy(cell_value)
+                canvas.clipboard_append(cell_value)
 
     def open_edit_window(event):
         # Получаем идентификатор строки, на которую был выполнен двойной щелчок
