@@ -2,6 +2,7 @@ import tkinter as tk
 import mysql.connector
 from tkinter import ttk
 from tkinter import messagebox
+from datetime import datetime, timedelta
 
 
 def spec_zakaz(canvas, id_meneger):
@@ -26,7 +27,6 @@ def spec_zakaz(canvas, id_meneger):
 
         # Получаем все строки из результата запроса
         rows = cursor.fetchall()
-
         # Закрываем соединение
         conn.close()
 
@@ -53,12 +53,96 @@ def spec_zakaz(canvas, id_meneger):
             notebook.tab(0, state='disabled')
 
     def add_new_zakaz(entr):
-        print(entr)
+        global treeview_zakaz_product
         values = []
         for row in treeview_zakaz_product.get_children():
-            values.append(treeview_zakaz_product.item(row, 'values'))
-        print(values)
-        print('выполнить запрос')
+            item = treeview_zakaz_product.item(row, 'values')[0]
+            values.append(item)
+
+        id_zakaz = int(load_data_from_db('select id_заказ from заказ order by id_заказ desc limit 1')[0][0]) + 1
+        print(entr[8:])
+
+        if entr[8] == 'автоматическое':
+            id_komplekt = load_data_from_db(
+                'select id_комплектовщик from комплектовщик where сотрудник_id_сотрудник In (select id_сотрудник from сотрудник where специальность="комплектовщик" and статус="в работе" ) order by rand() limit 1;')[
+                0][0]
+        else:
+            id_komplekt = load_data_from_db(
+                f'select id_комплектовщик from комплектовщик where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entr[8]}");')[
+                0][0]
+
+        if entr[9] == 'автоматическое':
+            id_prover = load_data_from_db(
+                'select id_проверяющий_комплектовку from `проверяющий комплектовку` where сотрудник_id_сотрудник in (select id_сотрудник from сотрудник where специальность="проверяющий комплектовку" and статус="в работе") order by rand() limit 1;')[
+                0][0]
+        else:
+            id_prover = load_data_from_db(
+                f'select id_проверяющий_комплектовку from `проверяющий комплектовку` where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entr[9]}");')[
+                0][0]
+
+        if entr[10] == 'автоматическое':
+            id_voditel = load_data_from_db(
+                'select id_водитель from водитель where сотрудник_id_сотрудник in (select id_сотрудник from сотрудник where специальность="водитель" and статус="в работе") order by rand() limit 1;')[
+                0][0]
+        else:
+            id_voditel = load_data_from_db(
+                f'select id_водитель from водитель where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entr[10]}");')[
+                0][0]
+
+        if entr[11] == 'автоматическое':
+            id_yacheyki = load_data_from_db(
+                "select id_место_оформления_заказа from камера_хранения_заказа where статус = 'свободна' order by rand() limit 1")[
+                0][0]
+        else:
+            id_yacheyki = load_data_from_db(
+                f'select id_место_оформления_заказа from камера_хранения_заказа where название="{entr[11]}" and статус!="заблокирована";')[
+                0][0]
+
+        if entr[2] == 'автоматическое':
+            time_give = (datetime.now() + timedelta(minutes=len(values) * 15 + 60)).replace(second=0, microsecond=0)
+        else:
+            time_give = entr[2]
+        id_men = load_data_from_db(f'select id_менеджер from менеджер where сотрудник_id_сотрудник = {id_meneger}')[0][
+            0]
+        quary_zakaz = f"INSERT INTO заказ (`id_заказ`, `клиент_id_клиент`, `время_на_сборку`, `время_сборки`, `время_проверки`, `время_отправки`, `статус`, `менеджер_id_менеджер`, `комплектовщик_id_комплектовщик`, `проверяющий комплектовку_id_проверяющий_комплектовку` ,`водитель_id_водитель`, `камера_хранения_заказа_id_место_оформления_заказа`) VALUES ({id_zakaz}, {entr[1]}, '{time_give}', null,null,null, 'готовится к сборке', {id_men},{id_komplekt},{id_prover},{id_voditel},{id_yacheyki});"
+
+        quary_update = ''
+        quary_tovar = 'insert into `товары в заказе`(товар_id_товара,статус,заказ_id_заказ) values '
+        for i in values:
+            quary_tovar += f'({i},"готовится к сборке",{id_zakaz}),'
+            quary_update += f"UPDATE товар SET статус = 'занят' WHERE id_товара = {i};\n"
+        quary_tovar = quary_tovar[:-1] + ';'
+
+        print(quary_zakaz + quary_tovar + quary_update)
+
+        try:
+            # Подключение к базе данных
+            conn = mysql.connector.connect(
+                host="localhost",  # Замените на ваш хост
+                user="root",  # Замените на ваше имя пользователя
+                password="",  # Замените на ваш пароль
+                database="sklad"  # Название базы данных
+            )
+            cursor = conn.cursor()
+
+            # Выполняем запрос на добавление заказа
+            cursor.execute(quary_zakaz)
+
+            # Выполняем запрос на добавление товаров в заказ
+            cursor.execute(quary_tovar)
+
+            # Выполняем каждый запрос обновления статуса товара отдельно
+            for query in quary_update.strip().split("\n"):
+                cursor.execute(query)
+
+            conn.commit()
+            messagebox.showinfo('Успешно', f"Заказ {id_zakaz} добавлен")
+        except mysql.connector.Error as error:
+            messagebox.showerror('Ошибка', f"Ошибка при подключении к базе данных:\n{error}")
+        finally:
+            if conn.is_connected():
+                cursor.close()
+                conn.close()
 
     def create_order_tab(notebook):
         def copy_to_clipboard(event):
@@ -71,6 +155,7 @@ def spec_zakaz(canvas, id_meneger):
                 cell_value = worked_employee_treeview.set(row_id, column_id)
                 if cell_value:
                     messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
+                    canvas.clipboard_clear()
                     canvas.clipboard_append(cell_value)
 
         def copy_to_clipboard1(event):
@@ -83,6 +168,7 @@ def spec_zakaz(canvas, id_meneger):
                 cell_value = camera_treeview.set(row_id, column_id)
                 if cell_value:
                     messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
+                    canvas.clipboard_clear()
                     canvas.clipboard_append(cell_value)
 
         # Функция для поиска по наименованию ячейки
@@ -158,6 +244,8 @@ def spec_zakaz(canvas, id_meneger):
         camera_treeview.bind("<Double-1>", copy_to_clipboard1)
 
     def create_product_tab(notebook):
+        global treeview_zakaz_product
+
         def search_product():
             rows = load_data_from_db(
                 f"SELECT * FROM `перечень товаров` WHERE `штрих-код` LIKE '%{entry_search_product.get()}%'")
@@ -240,11 +328,12 @@ def spec_zakaz(canvas, id_meneger):
 
         treeview_all.bind("<Double-1>", lambda event: do_treeview_all_product())
         treeview_all_product.bind("<Double-1>", add_tovar_zakaz)
-        treeview_zakaz_product .bind("<Double-1>", on_double_click)
+        treeview_zakaz_product.bind("<Double-1>", on_double_click)
 
         tk.Label(product_frame, text=">", font=("Arial", 32), bg='#dcdcde').place(x=690, y=310)
         tk.Label(product_frame, text=">", font=("Arial", 32), bg='#dcdcde').place(x=980, y=310)
 
+    treeview_zakaz_product = ttk.Treeview()
     # Метки и поля для ввода (id, логин, фамилия, имя, отчество, специальность)
     labels = [
         "id_заказ", "id_клиент", "время_на_сборку", "время_сборки", "время_проверки",
@@ -328,11 +417,11 @@ def spec_zakaz(canvas, id_meneger):
     button_add_zakaz = tk.Button(canvas, font=("Helvetica", 15), text="Создать заказ",
                                  command=lambda: add_new_zakaz([entries[i].get() for i in entries]))
     button_add_zakaz.place(x=1600, y=850)
-    notebook.select(1)
 
 
 STAGE = 0
 zakaz_inform = []
+
 if __name__ == '__main__':
     # Основное окно
 

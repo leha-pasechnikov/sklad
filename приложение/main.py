@@ -8,10 +8,10 @@ from zakaz_information import zakaz_information
 from unloading_shipment import postavka_information
 from sostav_kamera_save import sostav_kamera
 from spec_zakaz import spec_zakaz
+from status import change_status
 
 
 def main(id_meneger):
-
     # Основное окно
     root = tk.Tk()
     root.title("Управление заказами")
@@ -64,7 +64,7 @@ def main(id_meneger):
 
     # Меню "Статусы"
     employees_menu = tk.Menu(menu_bar, tearoff=0)
-    employees_menu.add_command(label="Изменить статус", command=lambda: switch('print(123)'))
+    employees_menu.add_command(label="Изменить статус", command=lambda: switch('change_status(canvas)'))
     menu_bar.add_cascade(label="Статусы", menu=employees_menu)
 
     # Меню "Поставки"
@@ -91,8 +91,12 @@ def main(id_meneger):
 
     # Устанавливаем меню в главное окно
     root.config(menu=menu_bar)
+
+    work_shedule(canvas)
+
     # Запуск главного цикла
     root.mainloop()
+
 
 
 if __name__ == '__main__':
