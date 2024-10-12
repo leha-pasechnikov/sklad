@@ -10,10 +10,10 @@
     <header>
         <h1>Интернет-склад</h1>
         <nav>
-            <button id="home-btn">Главная</button>
-            <button id="catalog-btn">Каталог</button>
-            <button id="cart-btn">Корзина (<span id="cart-count">0</span>)</button>
-            <button id="register-btn">Регистрация</button>
+            <button id="home-btn" class="nav-btn">Главная</button>
+            <button id="catalog-btn" class="nav-btn">Каталог</button>
+            <button id="cart-btn" class="nav-btn">Корзина (<span id="cart-count">0</span>)</button>
+            <button id="register-btn" class="nav-btn" disabled>Регистрация</button>
         </nav>
     </header>
 
@@ -32,6 +32,12 @@
             <button data-category="food" class="category">Продукты</button>
         </div>
         <div id="products-container" class="products-grid"></div>
+    </div>
+    <!-- Страница корзины -->
+    <div id="cart" class="section" style="display:none;">
+        <h2>Корзина</h2>
+        <div id="cart-items"></div>
+        <p id="order-message" style="display:none; color: green;"></p>
     </div>
 
     <!-- Модальное окно регистрации -->
@@ -55,10 +61,8 @@
             <h2>Ваша корзина</h2>
             <div id="cart-modal-items"></div>
             <button id="checkout">Оформить заказ</button> <p id="cart-modal-message" style="display:none; color: green;"></p>
-
         </div>
     </div>
-
     <footer>
         <p>© 2024 Интернет-склад. Все права защищены.</p>
     </footer>
