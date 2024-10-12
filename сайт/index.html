@@ -33,13 +33,6 @@
         </div>
         <div id="products-container" class="products-grid"></div>
     </div>
-    <!-- Страница корзины -->
-    <div id="cart" class="section" style="display:none;">
-        <h2>Корзина</h2>
-        <div id="cart-items"></div>
-        <button id="checkout">Оформить заказ</button>
-        <p id="order-message" style="display:none; color: green;"></p>
-    </div>
 
     <!-- Модальное окно регистрации -->
     <div id="register-modal" class="modal">
@@ -52,6 +45,17 @@
                 <p id="registration-message" style="display: none; color: red;">Заполните все поля</p>
                 <button type="submit">Зарегистрироваться</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно корзины -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <button id="close-cart-modal" class="close-btn">X</button>
+            <h2>Ваша корзина</h2>
+            <div id="cart-modal-items"></div>
+            <button id="checkout">Оформить заказ</button> <p id="cart-modal-message" style="display:none; color: green;"></p>
+
         </div>
     </div>
 
