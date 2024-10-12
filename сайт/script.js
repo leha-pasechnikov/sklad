@@ -1,9 +1,11 @@
 const homeSection = document.getElementById('home');
 const catalogSection = document.getElementById('catalog');
+
 const registerBtn = document.getElementById('register-btn');
 const userName = document.getElementById('user-name');
 const cartCount = document.getElementById('cart-count');
 const productsContainer = document.getElementById('products-container');
+
 const registrationMessage = document.getElementById('registration-message');
 const registerModal = document.getElementById('register-modal');
 const closeModal = document.getElementById('close-modal');
@@ -12,6 +14,7 @@ const closeCartModal = document.getElementById('close-cart-modal');
 const cartModalItemsContainer = document.getElementById('cart-modal-items');
 const cartModalMessage = document.getElementById('cart-modal-message');
 
+
 let isUserRegistered = false;
 let cart = [];
 
@@ -19,6 +22,7 @@ let cart = [];
 function hideAllPages() {
     homeSection.style.display = 'none';
     catalogSection.style.display = 'none';
+
 }
 
 // Показ главной страницы
@@ -26,6 +30,7 @@ document.getElementById('home-btn').addEventListener('click', () => {
     hideAllPages();
     homeSection.style.display = 'block';
 });
+
 
 // Показ каталога
 document.getElementById('catalog-btn').addEventListener('click', () => {
@@ -37,6 +42,7 @@ document.getElementById('catalog-btn').addEventListener('click', () => {
 // Закрытие модального окна
 closeModal.addEventListener('click', () => {
     registerModal.style.display = 'none';
+
 });
 
 // Показываем модальное окно при нажатии на кнопку "Регистрация"
@@ -67,7 +73,9 @@ closeModal.addEventListener('click', () => {
 
 // Обработка регистрации
 document.getElementById('register-form').addEventListener('submit', (event) => {
+
     event.preventDefault();
+
 
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -75,6 +83,7 @@ document.getElementById('register-form').addEventListener('submit', (event) => {
     if (username && password) {
         // Скрываем модальное окно регистрации
         registerModal.style.display = 'none';
+
 
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
@@ -111,26 +120,32 @@ const productsByCategory = {
     toys: [
         { id: 1, name: "Мяч", price: 500, image: 'ball.jpg' },
         { id: 2, name: "Кукла", price: 700, image: 'doll.jpg' },
+site
         { id: 1, name: "Мяч", price: 500, image: 'ball.jpg' },
         { id: 2, name: "Кукла", price: 700, image: 'doll.jpg' },
         { id: 1, name: "Мяч", price: 500, image: 'ball.jpg' },
         { id: 2, name: "Кукла", price: 700, image: 'doll.jpg' },
+
     ],
     clothes: [
         { id: 7, name: "Футболка", price: 1000, image: 'tshirt.jpg' },
         { id: 8, name: "Джинсы", price: 1500, image: 'jeans.jpg' },
+
         { id: 7, name: "Футболка", price: 1000, image: 'tshirt.jpg' },
         { id: 8, name: "Джинсы", price: 1500, image: 'jeans.jpg' },
         { id: 7, name: "Футболка", price: 1000, image: 'tshirt.jpg' },
         { id: 8, name: "Джинсы", price: 1500, image: 'jeans.jpg' },
+
     ],
     food: [
         { id: 13, name: "Хлеб", price: 100, image: 'bread.jpg' },
         { id: 14, name: "Молоко", price: 50, image: 'milk.jpg' },
+
         { id: 13, name: "Хлеб", price: 100, image: 'bread.jpg' },
         { id: 14, name: "Молоко", price: 50, image: 'milk.jpg' },
         { id: 13, name: "Хлеб", price: 100, image: 'bread.jpg' },
         { id: 14, name: "Молоко", price: 50, image: 'milk.jpg' },
+
     ]
 };
 
@@ -180,6 +195,7 @@ function loadCart() {
         return;
     }
 
+
     cart.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.innerHTML = `
@@ -203,12 +219,14 @@ function loadCartModal() {
         return;
     }
 
+
     cart.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.innerHTML = `
             <h4>${item.name} x ${item.quantity}</h4>
             <p>Цена: ${item.price} руб. (Итого: ${item.price * item.quantity} руб.)</p>
         `;
+
         cartModalItemsContainer.appendChild(itemDiv);
     });
 }
@@ -282,3 +300,4 @@ function loadCartModal() {
         cartModalItemsContainer.appendChild(itemDiv);
     });
 }
+

@@ -4,8 +4,7 @@ from tkinter import ttk
 from tkinter import messagebox
 
 
-
-def sostav_yacheyki(canvas):
+def sostav_kamera(canvas):
     # Функция для выполнения запроса и заполнения второй таблицы
     def on_row_select(event):
         selected_item = tree_1.selection()[0]
@@ -17,11 +16,20 @@ def sostav_yacheyki(canvas):
 
         # SQL запрос для получения данных по выбранной ячейке
         query = f"""
-SELECT id_перечень_товаров, `перечень товаров`.наименование AS наименование_товара, `штрих-код`, марка, `qr-код`, срок_годности, время_распределения
-FROM ячейка
-JOIN товар ON ячейка.id_ячейки = товар.ячейка_id_ячейки
-JOIN `перечень товаров` ON товар.`перечень товаров_id_перечень_товаров` = `перечень товаров`.id_перечень_товаров
-WHERE ячейка.id_ячейки = {selected_id};
+SELECT 
+s1.id_товара,
+z.наименование as "наименование товара",
+z.`штрих-код`,
+s1.марка,
+s1.`qr-код`,
+s2.статус as "статус товара", 
+s3.id_заказ,
+s3.статус as "статус заказа"
+FROM `перечень товаров` z
+JOIN товар s1 ON z.id_перечень_товаров = s1.`перечень товаров_id_перечень_товаров`
+JOIN `товары в заказе` s2 ON s1.id_товара = s2.товар_id_товара
+JOIN заказ s3 ON s2.заказ_id_заказ = s3.id_заказ
+WHERE s3.камера_хранения_заказа_id_место_оформления_заказа = {selected_id} and s3.статус="готовится к отправке" or "проверяется";
         """
         cursor.execute(query)
         result = cursor.fetchall()
@@ -33,7 +41,7 @@ WHERE ячейка.id_ячейки = {selected_id};
     # Функция для поиска по наименованию ячейки
     def search():
         search_term = entry_search.get()
-        query = f"SELECT * FROM ячейка WHERE наименование LIKE '%{search_term}%'"
+        query = f"select * from камера_хранения_заказа where название LIKE '%{search_term}%'"
         cursor.execute(query)
         rows = cursor.fetchall()
 
@@ -47,7 +55,7 @@ WHERE ячейка.id_ячейки = {selected_id};
 
     # Создание первой таблицы для отображения данных из таблицы 'ячейка'
     tree_1 = ttk.Treeview(canvas, columns=('id_ячейки', 'наименование', 'статус'), show='headings')
-    tree_1.heading('id_ячейки', text='ID Ячейки')
+    tree_1.heading('id_ячейки', text='ID Камера')
     tree_1.heading('наименование', text='Наименование')
     tree_1.heading('статус', text='Статус')
     tree_1.column('id_ячейки', width=100)
@@ -56,17 +64,22 @@ WHERE ячейка.id_ячейки = {selected_id};
 
     tree_1.place(x=50, y=150, height=750)
 
+    fq=['#1', '#2', '#3', '#4', '#5', '#6',
+        '#7',"#8"]
     # Создание таблицы для отображения результатов запроса
-    tree_2 = ttk.Treeview(canvas, columns=(
-        'id_перечень_товаров', 'наименование_товара', 'штрих-код', 'марка', 'qr-код', 'срок_годности',
-        'время_распределения'), show='headings')
-    tree_2.heading('id_перечень_товаров', text='ID Товара')
-    tree_2.heading('наименование_товара', text='Наименование Товара')
-    tree_2.heading('штрих-код', text='Штрих-код')
-    tree_2.heading('марка', text='Марка')
-    tree_2.heading('qr-код', text='QR-код')
-    tree_2.heading('срок_годности', text='Срок годности')
-    tree_2.heading('время_распределения', text='Время распределения')
+    tree_2 = ttk.Treeview(canvas, columns=(fq), show='headings')
+    tree_2.heading('#1', text='ID Товара')
+    tree_2.heading('#2', text='Наименование Товара')
+    tree_2.heading('#3', text='Штрих-код')
+    tree_2.heading('#4', text='Марка')
+    tree_2.heading('#5', text='QR-код')
+    tree_2.heading('#6', text='Статус товара')
+    tree_2.heading('#7', text='id_заказа')
+    tree_2.heading('#8', text='Статус заказа')
+    for i in fq:
+        tree_2.column(i, width=175)
+
+
 
     # Функция для копирования значения в буфер обмена
     def copy_to_clipboard(event):
@@ -96,7 +109,7 @@ WHERE ячейка.id_ячейки = {selected_id};
     button_search.place(x=270, y=47)
 
     # Загрузка данных для первой таблицы из базы данных
-    cursor.execute("SELECT * FROM ячейка")
+    cursor.execute("select * from камера_хранения_заказа")
     rows = cursor.fetchall()
     for row in rows:
         tree_1.insert('', tk.END, values=row)
@@ -121,7 +134,7 @@ if __name__ == '__main__':
     can = tk.Canvas(root, width=1920, height=1080)
     can.pack()
     # Запуск программы
-    sostav_yacheyki(can)
+    sostav_kamera(can)
     root.mainloop()
     # Закрытие соединения с базой данных
     cursor.close()

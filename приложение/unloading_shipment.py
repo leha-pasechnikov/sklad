@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import mysql.connector
-import pyperclip
+
 
 
 def postavka_information(canvas):
@@ -56,7 +56,8 @@ def postavka_information(canvas):
             cell_value = worked_employee_treeview.set(row_id, column_id)
             if cell_value:
                 messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
-                pyperclip.copy(cell_value)
+                canvas.clipboard_clear()
+                canvas.clipboard_append(cell_value)
 
     def copy_to_clipboard2(event):
         # Получаем координаты клика
@@ -68,7 +69,8 @@ def postavka_information(canvas):
             cell_value = treeview_tovar.set(row_id, column_id)
             if cell_value:
                 messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
-                pyperclip.copy(cell_value)
+                canvas.clipboard_clear()
+                canvas.clipboard_append(cell_value)
 
     def open_edit_window(event):
         # Получаем идентификатор строки, на которую был выполнен двойной щелчок
@@ -81,7 +83,6 @@ def postavka_information(canvas):
         edit_window.title("Редактирование записи")
         edit_window.geometry("400x420")
 
-        # Метки и поля для ввода (id, логин, фамилия, имя, отчество, специальность)
         labels = [
             "id_поставки", "дата отгрузки", "дата приёма", "логин менеджера", "логин принимающего поставку",
             "логин водителя"
@@ -266,13 +267,13 @@ order by z.`дата отгрузки` desc;
     worked_employee_treeview.heading('#3', text='фамилия')
     worked_employee_treeview.heading('#4', text='имя')
     worked_employee_treeview.heading('#5', text='отчество')
-    worked_employee_treeview.heading('#6', text='специальность')
+    worked_employee_treeview.heading('#6', text='должность')
     worked_employee_treeview.place(x=500, y=80, height=400)
 
     # Создаем метку для отображения нажатой кнопки
-    label = tk.Label(canvas, text="Специальность:", font=("Helvetica", 20))
+    label = tk.Label(canvas, text="Должность:", font=("Helvetica", 20))
     label.place(x=50, y=80)
-    label = tk.Label(canvas, text="Специальность не выбрана", font=("Helvetica", 16))
+    label = tk.Label(canvas, text="Должность не выбрана", font=("Helvetica", 16))
     label.place(x=50, y=150)
 
     # Создаем кнопки

@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import mysql.connector
-import pyperclip
 
 
 def zakaz_information(canvas):
@@ -57,7 +56,8 @@ def zakaz_information(canvas):
             cell_value = worked_employee_treeview.set(row_id, column_id)
             if cell_value:
                 messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
-                pyperclip.copy(cell_value)
+                canvas.clipboard_clear()
+                canvas.clipboard_append(cell_value)
 
     def open_edit_window(event):
         # Получаем идентификатор строки, на которую был выполнен двойной щелчок
@@ -70,14 +70,13 @@ def zakaz_information(canvas):
         edit_window.title("Редактирование записи")
         edit_window.geometry("400x420")
 
-        # Метки и поля для ввода (id, логин, фамилия, имя, отчество, специальность)
         labels = [
             "id_заказ", "id_клиент", "время_на_сборку", "время_сборки", "время_проверки",
             "время_отправки", "статус", "логин менеджера",
             "логин комплектовщика",
             "логин проверяющего комплектовку",
             "логин водителя",
-            "номер ячейки"
+            "камера хранения"
         ]
         entries = {}
 
@@ -106,7 +105,7 @@ def zakaz_information(canvas):
                 f'select id_водитель from водитель where сотрудник_id_сотрудник=(select id_сотрудник from сотрудник where логин="{entries["логин водителя"].get()}");')[
                 0][0]
             id_yacheyki = load_data_from_db(
-                f'select id_место_оформления_заказа from камера_хранения_заказа where название="{entries["номер ячейки"].get()}" and статус!="заблокирована";')[
+                f'select id_место_оформления_заказа from камера_хранения_заказа where название="{entries["камера хранения"].get()}" and статус!="заблокирована";')[
                 0][0]
             quary = f'''
     UPDATE заказ
@@ -155,6 +154,50 @@ def zakaz_information(canvas):
         save_button = tk.Button(edit_window, text="Сохранить", command=save_changes)
         save_button.place(x=280, y=380)
 
+    def on_treeview_select(event):
+        # Получаем выбранную строку
+        selected_item = treeview.selection()
+        if selected_item:
+            # Получаем значение первого столбца (id заказа)
+            id_zakaz = treeview.item(selected_item, 'values')[0]
+
+            # Выполняем запрос к базе данных
+            query = f"""
+            SELECT  
+                s2.наименование,
+                s2.`штрих-код`,
+                s1.марка,
+                s1.`qr-код`,
+                z.статус 
+            FROM `товары в заказе` z
+            JOIN товар s1 ON s1.id_товара = z.товар_id_товара
+            JOIN `перечень товаров` s2 ON s2.id_перечень_товаров = s1.`перечень товаров_id_перечень_товаров`
+            WHERE z.заказ_id_заказ = {id_zakaz};
+            """
+
+            rows=load_data_from_db(query)
+            # Очистка существующих данных в treeview_tovar
+            for item in treeview_tovar.get_children():
+                treeview_tovar.delete(item)
+
+            # Заполнение treeview_tovar новыми данными
+            for row in rows:
+                treeview_tovar.insert('', 'end', values=row)
+            label_tovar['text'] = f"Товары в заказе: {id_zakaz}"
+
+    def copy_to_clipboard1(event):
+        # Получаем координаты клика
+        row_id = treeview_tovar.identify_row(event.y)
+        column_id = treeview_tovar.identify_column(event.x)
+
+        if row_id and column_id:
+            # Получаем значение ячейки по клику
+            cell_value = treeview_tovar.set(row_id, column_id)
+            if cell_value:
+                messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
+                canvas.clipboard_clear()
+                canvas.clipboard_append(cell_value)
+
     # Создаем таблицу Treeview с колонками из таблицы "заказ"
     columns = (
         "id_заказ", "id_клиент", "время_на_сборку", "время_сборки", "время_проверки",
@@ -162,7 +205,7 @@ def zakaz_information(canvas):
         "логин комплектовщика",
         "логин проверяющего комплектовку",
         "логин водителя",
-        "номер ячейки"
+        "камера хранения"
     )
 
     treeview = ttk.Treeview(canvas, columns=columns, show="headings")
@@ -228,11 +271,15 @@ def zakaz_information(canvas):
     worked_employee_treeview.heading('#3', text='фамилия')
     worked_employee_treeview.heading('#4', text='имя')
     worked_employee_treeview.heading('#5', text='отчество')
-    worked_employee_treeview.heading('#6', text='специальность')
+    worked_employee_treeview.heading('#6', text='должность')
+    # Устанавливаем заголовки для каждого столбца
+    for col in ['#1', '#2', '#3', '#4', '#5', '#6']:
+        worked_employee_treeview.column(col, width=160)
 
-    worked_employee_treeview.place(x=500, y=80, height=400)
+    worked_employee_treeview.place(x=400, y=80, height=400)
 
     # Привязываем обработчик события клика по ячейке
+
     worked_employee_treeview.bind("<Double-1>", copy_to_clipboard)
     treeview.bind("<Double-1>", open_edit_window)
 
@@ -244,10 +291,11 @@ def zakaz_information(canvas):
     for item in data:
         worked_employee_treeview.insert("", tk.END, values=item)
 
+
     # Создаем метку для отображения нажатой кнопки
-    label = tk.Label(canvas, text="Специальность:", font=("Helvetica", 20))
+    label = tk.Label(canvas, text="Должность:", font=("Helvetica", 20))
     label.place(x=50, y=80)
-    label = tk.Label(canvas, text="Специальность не выбрана", font=("Helvetica", 16))
+    label = tk.Label(canvas, text="Должность не выбрана", font=("Helvetica", 16))
     label.place(x=50, y=150)
 
     # Создаем кнопки
@@ -263,6 +311,27 @@ def zakaz_information(canvas):
                            command=lambda name=button_name: button_click(name))
         button.place(x=50, y=200 + index * 40, width=300)
 
+
+
+    label_tovar = tk.Label(canvas, text="Товары в заказе: ?", font=("Helvetica", 20))
+    label_tovar.place(x=1400, y=80)
+
+
+    treeview_tovar = ttk.Treeview(canvas, columns=('#1', '#2', '#3', '#4', '#5'), show="headings")
+
+    treeview_tovar.heading('#1', text='наименование')
+    treeview_tovar.heading('#2', text='штрих-код')
+    treeview_tovar.heading('#3', text='марка')
+    treeview_tovar.heading('#4', text='qr-код')
+    treeview_tovar.heading('#5', text='статус')
+    # Устанавливаем заголовки для каждого столбца
+    for col in ['#1', '#2', '#3', '#4', '#5']:
+        treeview_tovar.column(col, width=90)
+
+    treeview_tovar.place(x=1400, y=180, height=300)
+    # Привязываем обработчик к событию выбора строки в worked_employee_treeview
+    treeview.bind("<<TreeviewSelect>>", on_treeview_select)
+    treeview_tovar.bind("<Double-1>", copy_to_clipboard1)
 
 if __name__ == '__main__':
     # Создание основного окна
