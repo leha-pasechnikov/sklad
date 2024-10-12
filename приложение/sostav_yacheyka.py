@@ -79,6 +79,7 @@ WHERE ячейка.id_ячейки = {selected_id};
             cell_value = tree_2.set(row_id, column_id)
             if cell_value:
                 messagebox.showinfo("Информирование", f"Скопировано: {cell_value}")
+                canvas.clipboard_clear()
                 canvas.clipboard_append(cell_value)
 
     tree_2.place(x=450, y=150, height=750)

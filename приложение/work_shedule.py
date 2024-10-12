@@ -295,7 +295,7 @@ def work_shedule(canvas):
 
     worked_employee_treeview.place(x=880, y=430, height=410)
 
-    label_spec = tk.Label(canvas, text="Специальность:", font=("Helvetica", 20))
+    label_spec = tk.Label(canvas, text="Должность:", font=("Helvetica", 20))
     label_spec.place(x=900, y=80)
 
     # Создаем кнопки
