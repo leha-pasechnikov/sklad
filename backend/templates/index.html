@@ -2,27 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Товары</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask API Test</title>
 </head>
 <body>
-    <h1>Список товаров</h1>
-    <table>
-        <tr>
-            <th>Наименование</th>
-            <th>Штрих-код</th>
-            <th>Действие</th>
-        </tr>
-        {% for product in products %}
-        <tr>
-            <td>{{ product['наименование'] }}</td>
-            <td>{{ product['штрих-код'] }}</td>
-            <td>
-                <form action="{{ url_for('buy_product', product_id=product['id_перечень_товаров']) }}" method="post">
-                    <button type="submit">Купить</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    <h1>Test API Endpoints</h1>
+    
+    <!-- Форма для добавления пользователя -->
+    <h2>Add User</h2>
+    <form id="addUserForm">
+        <button type="submit">Add User</button>
+    </form>
+    <div id="addUserResult"></div>
+
+    <!-- Форма для получения информации о товарах (игрушки) -->
+    <h2>Get Toys</h2>
+    <button id="getToysBtn">Get Toys</button>
+    <div id="toysResult"></div>
+
+    <!-- Форма для проверки пользователя -->
+    <h2>User Verification</h2>
+    <button id="userVerificationBtn">Verify User</button>
+    <div id="userVerificationResult"></div>
+
+    <!-- Кнопка для добавления заказа -->
+    <h2>Add Order</h2>
+    <button id="addZakazBtn">Add Order</button>
+    <div id="addZakazResult"></div>
+
+    <script>
+        // Функция для добавления пользователя
+        document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const response = await fetch('/add_user', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            document.getElementById('addUserResult').innerText = JSON.stringify(data);
+        });
+
+        // Функция для получения информации о товарах (игрушки)
+        document.getElementById('getToysBtn').addEventListener('click', async function() {
+            const response = await fetch('/get_tovar_toys', {
+                method: 'GET'
+            });
+            const data = await response.json();
+            document.getElementById('toysResult').innerText = JSON.stringify(data);
+        });
+
+        // Функция для проверки пользователя
+        document.getElementById('userVerificationBtn').addEventListener('click', async function() {
+            const response = await fetch('/user_verification', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            document.getElementById('userVerificationResult').innerText = JSON.stringify(data);
+        });
+
+        // Функция для добавления заказа
+        document.getElementById('addZakazBtn').addEventListener('click', async function() {
+            const response = await fetch('/add_zakaz', {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+            document.getElementById('addZakazResult').innerText = JSON.stringify(data);
+        });
+    </script>
 </body>
 </html>
